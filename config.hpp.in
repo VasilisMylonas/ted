@@ -1,0 +1,9 @@
+#pragma once
+
+namespace ted
+{
+    namespace config
+    {
+        constexpr const char *version = "@PROJECT_VERSION@";
+    } // namespace config
+} // namespace ted
