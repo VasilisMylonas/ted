@@ -1,6 +1,7 @@
 #pragma once
 
-#include <wx/wx.h>
+#include "Core.hpp"
+#include "MainPresenter.hpp"
 
 class MainFrame : public wxFrame
 {
@@ -13,16 +14,13 @@ public:
     void OnSaveAs(wxCommandEvent &event);
     void OnQuit(wxCommandEvent &event);
     void OnClose(wxCloseEvent &event);
-    void SetCurrentFile(wxString path);
-
-    void Open();
-    bool SaveAs();
-    void Save();
-    void Load();
-
-    wxDECLARE_EVENT_TABLE();
 
 private:
+    wxDECLARE_EVENT_TABLE();
+
+public:
+    wxTextCtrl *textArea;
+
     wxMessageDialog unsavedChangesDialog{
         this,
         wxT("You have unsaved changes. Your changes will be lost if you don't save."),
@@ -48,6 +46,5 @@ private:
         wxFD_OPEN | wxFD_FILE_MUST_EXIST,
     };
 
-    wxTextCtrl *textArea;
-    wxString currentFile;
+    MainPresenter presenter;
 };

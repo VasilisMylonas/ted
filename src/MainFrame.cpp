@@ -16,7 +16,7 @@ wxEND_EVENT_TABLE();
 /* clang-format on */
 
 MainFrame::MainFrame()
-    : wxFrame(nullptr, wxID_ANY, wxT("Ted"))
+    : wxFrame(nullptr, wxID_ANY, wxT("Ted")), presenter{*this}
 {
     unsavedChangesDialog.SetYesNoCancelLabels(wxT("Save"), wxT("Don't save"), wxT("Cancel"));
 
@@ -32,54 +32,6 @@ MainFrame::MainFrame()
     SetMenuBar(new MenuBar());
 }
 
-void MainFrame::SetCurrentFile(wxString path)
-{
-    currentFile = path;
-
-    if (currentFile.IsEmpty())
-    {
-        SetTitle("Ted");
-        textArea->Clear();
-    }
-    else
-    {
-        SetTitle(currentFile + " - Ted");
-    }
-}
-
-void MainFrame::Open()
-{
-    if (openFileDialog.ShowModal() == wxID_CANCEL)
-    {
-        return;
-    }
-
-    SetCurrentFile(openFileDialog.GetPath());
-    Load();
-}
-
-void MainFrame::Load()
-{
-    textArea->LoadFile(currentFile);
-}
-
-void MainFrame::Save()
-{
-    textArea->SaveFile(currentFile);
-}
-
-bool MainFrame::SaveAs()
-{
-    if (saveFileDialog.ShowModal() == wxID_CANCEL)
-    {
-        return false;
-    }
-
-    SetCurrentFile(saveFileDialog.GetPath());
-    Save();
-    return true;
-}
-
 void MainFrame::OnNewFile([[maybe_unused]] wxCommandEvent &event)
 {
     // TODO
@@ -87,17 +39,17 @@ void MainFrame::OnNewFile([[maybe_unused]] wxCommandEvent &event)
 
 void MainFrame::OnOpen([[maybe_unused]] wxCommandEvent &event)
 {
-    Open();
+    presenter.Open();
 }
 
 void MainFrame::OnSave([[maybe_unused]] wxCommandEvent &event)
 {
-    Save();
+    presenter.Save();
 }
 
 void MainFrame::OnSaveAs([[maybe_unused]] wxCommandEvent &event)
 {
-    SaveAs();
+    presenter.SaveAs();
 }
 
 void MainFrame::OnClose([[maybe_unused]] wxCloseEvent &event)
@@ -111,16 +63,9 @@ void MainFrame::OnClose([[maybe_unused]] wxCloseEvent &event)
     switch (unsavedChangesDialog.ShowModal())
     {
     case wxID_YES:
-        if (currentFile.IsEmpty())
+        if (!presenter.SaveOrSaveAs())
         {
-            if (!SaveAs())
-            {
-                return;
-            }
-        }
-        else
-        {
-            Save();
+            return;
         }
         event.Skip();
         break;
