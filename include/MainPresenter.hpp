@@ -10,6 +10,8 @@ class MainPresenter : public Presenter<MainFrame>, public wxEvtHandler
 public:
     MainPresenter(MainFrame &view);
 
+    void Init();
+
     void OnNewFile(wxCommandEvent &event);
     void OnOpen(wxCommandEvent &event);
     void OnSave(wxCommandEvent &event);
@@ -18,11 +20,12 @@ public:
     void OnClose(wxCloseEvent &event);
 
 private:
+    void Quit();
     void Open();
     bool SaveAs();
     void Save();
-    void SetCurrentFile(const wxString &path);
+    void SetCurrentFile(const std::string &path);
     bool SaveUnsavedChanges();
 
-    wxString currentFile;
+    std::string currentFile;
 };

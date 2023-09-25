@@ -7,6 +7,11 @@ MainPresenter::MainPresenter(MainFrame &view)
 {
 }
 
+void MainPresenter::Init()
+{
+    View().LoadHistory(*wxConfig::Get());
+}
+
 void MainPresenter::Open()
 {
     auto path = View().ShowOpenDialog();
@@ -18,6 +23,7 @@ void MainPresenter::Open()
 
     SetCurrentFile(*path);
     View().textArea->LoadFile(currentFile);
+    View().AddFileToHistory(currentFile);
 }
 
 void MainPresenter::Save()
@@ -39,22 +45,11 @@ bool MainPresenter::SaveAs()
     return true;
 }
 
-bool MainPresenter::SaveUnsavedChanges()
-{
-    if (currentFile.IsEmpty())
-    {
-        return SaveAs();
-    }
-
-    Save();
-    return true;
-}
-
-void MainPresenter::SetCurrentFile(const wxString &path)
+void MainPresenter::SetCurrentFile(const std::string &path)
 {
     currentFile = path;
 
-    if (currentFile.IsEmpty())
+    if (currentFile.empty())
     {
         View().SetTitle("Ted");
         View().textArea->Clear();
@@ -85,27 +80,45 @@ void MainPresenter::OnSaveAs([[maybe_unused]] wxCommandEvent &event)
     SaveAs();
 }
 
+void MainPresenter::Quit()
+{
+    View().SaveHistory(*wxConfig::Get());
+}
+
+bool MainPresenter::SaveUnsavedChanges()
+{
+    if (currentFile.empty())
+    {
+        return SaveAs();
+    }
+
+    Save();
+    return true;
+}
+
 void MainPresenter::OnClose([[maybe_unused]] wxCloseEvent &event)
 {
     if (!View().IsTextModified())
     {
+        Quit();
         event.Skip();
         return;
     }
 
     auto result = View().ShowUnsavedChangesDialog();
 
+    // Cancel
     if (!result)
     {
         return;
     }
 
-    if (*result && !SaveUnsavedChanges())
+    if (!result.value() || SaveUnsavedChanges())
     {
+        Quit();
+        event.Skip();
         return;
     }
-
-    event.Skip();
 }
 
 void MainPresenter::OnQuit([[maybe_unused]] wxCommandEvent &event)

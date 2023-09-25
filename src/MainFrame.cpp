@@ -1,7 +1,5 @@
 #include "MainFrame.hpp"
 
-#include "MenuBar.hpp"
-
 #include <iostream>
 #include <fstream>
 
@@ -19,21 +17,51 @@ MainFrame::MainFrame()
         wxTE_WORDWRAP | wxTE_MULTILINE,
     };
 
-    SetMenuBar(new MenuBar());
+    wxMenu *file = new wxMenu();
+    file->Append(wxID_OPEN);
+    file->AppendSeparator();
+    file->Append(wxID_SAVE);
+    file->Append(wxID_SAVEAS);
+    file->AppendSeparator();
+    file->Append(wxID_EXIT);
 
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnQuit, &presenter, wxID_EXIT);
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnOpen, &presenter, wxID_OPEN);
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSave, &presenter, wxID_SAVE);
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSaveAs, &presenter, wxID_SAVEAS);
-    Bind(wxEVT_CLOSE_WINDOW, &MainPresenter::OnClose, &presenter);
+    history.UseMenu(file);
+
+    wxMenuBar *menuBar = new wxMenuBar();
+    menuBar->Append(file, "&File");
+
+    SetMenuBar(menuBar);
+
+    // Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnQuit, &presenter, wxID_EXIT);
+    // Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnOpen, &presenter, wxID_OPEN);
+    // Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSave, &presenter, wxID_SAVE);
+    // Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSaveAs, &presenter, wxID_SAVEAS);
+    // Bind(wxEVT_CLOSE_WINDOW, &MainPresenter::OnClose, &presenter);
+
+    presenter.Init();
 }
 
-bool MainFrame::IsTextModified() const
+void MainFrame::AddFileToHistory(const std::string &path)
+{
+    history.AddFileToHistory(path);
+}
+
+void MainFrame::SaveHistory(wxConfigBase &config)
+{
+    history.Save(config);
+}
+
+void MainFrame::LoadHistory(wxConfigBase &config)
+{
+    history.Load(config);
+}
+
+bool MainFrame::IsTextModified()
 {
     return textArea->IsModified();
 }
 
-std::optional<bool> MainFrame::ShowUnsavedChangesDialog() const
+std::optional<bool> MainFrame::ShowUnsavedChangesDialog()
 {
     switch (unsavedChangesDialog.ShowModal())
     {
@@ -46,7 +74,7 @@ std::optional<bool> MainFrame::ShowUnsavedChangesDialog() const
     }
 }
 
-std::optional<std::string> MainFrame::ShowSaveDialog() const
+std::optional<std::string> MainFrame::ShowSaveDialog()
 {
     if (saveFileDialog.ShowModal() == wxID_CANCEL)
     {
@@ -56,7 +84,7 @@ std::optional<std::string> MainFrame::ShowSaveDialog() const
     return saveFileDialog.GetPath().ToStdString();
 }
 
-std::optional<std::string> MainFrame::ShowOpenDialog() const
+std::optional<std::string> MainFrame::ShowOpenDialog()
 {
     if (openFileDialog.ShowModal() == wxID_CANCEL)
     {
