@@ -5,20 +5,24 @@
 
 class MainFrame;
 
-class MainPresenter : public Presenter<MainFrame>
+class MainPresenter : public Presenter<MainFrame>, public wxEvtHandler
 {
 public:
-    MainPresenter(MainFrame &view) : Presenter(view)
-    {
-    }
+    MainPresenter(MainFrame &view);
 
+    void OnNewFile(wxCommandEvent &event);
+    void OnOpen(wxCommandEvent &event);
+    void OnSave(wxCommandEvent &event);
+    void OnSaveAs(wxCommandEvent &event);
+    void OnQuit(wxCommandEvent &event);
+    void OnClose(wxCloseEvent &event);
+
+private:
     void Open();
     bool SaveAs();
     void Save();
-    void Load();
     void SetCurrentFile(const wxString &path);
-    bool SaveOrSaveAs();
+    bool SaveUnsavedChanges();
 
-private:
-    wxString currentFile{};
+    wxString currentFile;
 };

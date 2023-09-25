@@ -1,18 +1,20 @@
 #pragma once
 
-template <typename View>
+#include "Core.hpp"
+
+template <typename TView>
 class Presenter
 {
 public:
-    Presenter(View &view) : view_{view}
+    Presenter(TView &view) : view{view}
     {
     }
 
-    View &view()
+    TView &View()
     {
-        return view_;
+        return view;
     }
 
 private:
-    View &view_;
+    TView &view;
 };

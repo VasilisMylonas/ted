@@ -1,53 +1,52 @@
 #include "MainPresenter.hpp"
+
 #include "MainFrame.hpp"
+
+MainPresenter::MainPresenter(MainFrame &view)
+    : Presenter(view)
+{
+}
 
 void MainPresenter::Open()
 {
-    if (view().openFileDialog.ShowModal() == wxID_CANCEL)
+    auto path = View().ShowOpenDialog();
+
+    if (!path)
     {
         return;
     }
 
-    SetCurrentFile(view().openFileDialog.GetPath());
-    Load();
-}
-
-void MainPresenter::Load()
-{
-    view().textArea->LoadFile(currentFile);
+    SetCurrentFile(*path);
+    View().textArea->LoadFile(currentFile);
 }
 
 void MainPresenter::Save()
 {
-    view().textArea->SaveFile(currentFile);
+    View().textArea->SaveFile(currentFile);
 }
 
 bool MainPresenter::SaveAs()
 {
-    if (view().saveFileDialog.ShowModal() == wxID_CANCEL)
+    auto path = View().ShowSaveDialog();
+
+    if (!path)
     {
         return false;
     }
 
-    SetCurrentFile(view().saveFileDialog.GetPath());
-    Save();
+    SetCurrentFile(*path);
+    View().textArea->SaveFile(currentFile);
     return true;
 }
 
-bool MainPresenter::SaveOrSaveAs()
+bool MainPresenter::SaveUnsavedChanges()
 {
     if (currentFile.IsEmpty())
     {
-        if (!SaveAs())
-        {
-            return false;
-        }
-    }
-    else
-    {
-        Save();
+        return SaveAs();
     }
 
+    Save();
     return true;
 }
 
@@ -57,11 +56,59 @@ void MainPresenter::SetCurrentFile(const wxString &path)
 
     if (currentFile.IsEmpty())
     {
-        view().SetTitle("Ted");
-        view().textArea->Clear();
+        View().SetTitle("Ted");
+        View().textArea->Clear();
     }
     else
     {
-        view().SetTitle(currentFile + " - Ted");
+        View().SetTitle(currentFile + " - Ted");
     }
+}
+
+void MainPresenter::OnNewFile([[maybe_unused]] wxCommandEvent &event)
+{
+    // TODO
+}
+
+void MainPresenter::OnOpen([[maybe_unused]] wxCommandEvent &event)
+{
+    Open();
+}
+
+void MainPresenter::OnSave([[maybe_unused]] wxCommandEvent &event)
+{
+    Save();
+}
+
+void MainPresenter::OnSaveAs([[maybe_unused]] wxCommandEvent &event)
+{
+    SaveAs();
+}
+
+void MainPresenter::OnClose([[maybe_unused]] wxCloseEvent &event)
+{
+    if (!View().IsTextModified())
+    {
+        event.Skip();
+        return;
+    }
+
+    auto result = View().ShowUnsavedChangesDialog();
+
+    if (!result)
+    {
+        return;
+    }
+
+    if (*result && !SaveUnsavedChanges())
+    {
+        return;
+    }
+
+    event.Skip();
+}
+
+void MainPresenter::OnQuit([[maybe_unused]] wxCommandEvent &event)
+{
+    View().Close();
 }

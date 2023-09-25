@@ -5,16 +5,6 @@
 #include <iostream>
 #include <fstream>
 
-/* clang-format off */
-wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    EVT_MENU(wxID_EXIT, MainFrame::OnQuit)
-    EVT_MENU(wxID_OPEN, MainFrame::OnOpen)
-    EVT_MENU(wxID_SAVE, MainFrame::OnSave)
-    EVT_MENU(wxID_SAVEAS, MainFrame::OnSaveAs)
-    EVT_CLOSE(MainFrame::OnClose)
-wxEND_EVENT_TABLE();
-/* clang-format on */
-
 MainFrame::MainFrame()
     : wxFrame(nullptr, wxID_ANY, wxT("Ted")), presenter{*this}
 {
@@ -30,54 +20,48 @@ MainFrame::MainFrame()
     };
 
     SetMenuBar(new MenuBar());
+
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnQuit, &presenter, wxID_EXIT);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnOpen, &presenter, wxID_OPEN);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSave, &presenter, wxID_SAVE);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &MainPresenter::OnSaveAs, &presenter, wxID_SAVEAS);
+    Bind(wxEVT_CLOSE_WINDOW, &MainPresenter::OnClose, &presenter);
 }
 
-void MainFrame::OnNewFile([[maybe_unused]] wxCommandEvent &event)
+bool MainFrame::IsTextModified() const
 {
-    // TODO
+    return textArea->IsModified();
 }
 
-void MainFrame::OnOpen([[maybe_unused]] wxCommandEvent &event)
+std::optional<bool> MainFrame::ShowUnsavedChangesDialog() const
 {
-    presenter.Open();
-}
-
-void MainFrame::OnSave([[maybe_unused]] wxCommandEvent &event)
-{
-    presenter.Save();
-}
-
-void MainFrame::OnSaveAs([[maybe_unused]] wxCommandEvent &event)
-{
-    presenter.SaveAs();
-}
-
-void MainFrame::OnClose([[maybe_unused]] wxCloseEvent &event)
-{
-    if (!textArea->IsModified())
-    {
-        event.Skip();
-        return;
-    }
-
     switch (unsavedChangesDialog.ShowModal())
     {
     case wxID_YES:
-        if (!presenter.SaveOrSaveAs())
-        {
-            return;
-        }
-        event.Skip();
-        break;
+        return true;
     case wxID_NO:
-        event.Skip();
-        break;
+        return false;
     default:
-        break;
+        return {};
     }
 }
 
-void MainFrame::OnQuit([[maybe_unused]] wxCommandEvent &event)
+std::optional<std::string> MainFrame::ShowSaveDialog() const
 {
-    Close();
+    if (saveFileDialog.ShowModal() == wxID_CANCEL)
+    {
+        return {};
+    }
+
+    return saveFileDialog.GetPath().ToStdString();
+}
+
+std::optional<std::string> MainFrame::ShowOpenDialog() const
+{
+    if (openFileDialog.ShowModal() == wxID_CANCEL)
+    {
+        return {};
+    }
+
+    return openFileDialog.GetPath().ToStdString();
 }

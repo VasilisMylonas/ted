@@ -3,32 +3,30 @@
 #include "Core.hpp"
 #include "MainPresenter.hpp"
 
+#include <optional>
+#include <string>
+
 class MainFrame : public wxFrame
 {
 public:
     MainFrame();
 
-    void OnNewFile(wxCommandEvent &event);
-    void OnOpen(wxCommandEvent &event);
-    void OnSave(wxCommandEvent &event);
-    void OnSaveAs(wxCommandEvent &event);
-    void OnQuit(wxCommandEvent &event);
-    void OnClose(wxCloseEvent &event);
+    bool IsTextModified() const;
+    std::optional<std::string> ShowSaveDialog() const;
+    std::optional<std::string> ShowOpenDialog() const;
+    std::optional<bool> ShowUnsavedChangesDialog() const;
 
-private:
-    wxDECLARE_EVENT_TABLE();
-
-public:
     wxTextCtrl *textArea;
 
-    wxMessageDialog unsavedChangesDialog{
+private:
+    mutable wxMessageDialog unsavedChangesDialog{
         this,
         wxT("You have unsaved changes. Your changes will be lost if you don't save."),
         wxT("Unsaved Changes"),
         wxYES_NO | wxCANCEL | wxICON_WARNING,
     };
 
-    wxFileDialog saveFileDialog{
+    mutable wxFileDialog saveFileDialog{
         this,
         wxT("Save File"),
         wxEmptyString,
@@ -37,7 +35,7 @@ public:
         wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
     };
 
-    wxFileDialog openFileDialog{
+    mutable wxFileDialog openFileDialog{
         this,
         wxT("Open File"),
         wxEmptyString,
