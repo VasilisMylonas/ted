@@ -97,6 +97,13 @@ void MainFrame::onClose(wxCloseEvent &event)
         {
             return;
         }
+
+        notebook->RemovePage(notebook->GetSelection());
+
+        if (notebook->GetPageCount() == 0)
+        {
+            enableMenus(false);
+        }
     }
 
     history.Save(*wxConfig::Get());
