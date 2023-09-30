@@ -18,9 +18,20 @@ public:
         return title;
     }
 
+    const std::string &Path()
+    {
+        return path;
+    }
+
     void Save()
     {
         content->SaveFile(path);
+    }
+
+    void SetPath(const std::string &path)
+    {
+        this->path = path;
+        title = getFilename(path);
     }
 
     bool IsModified()
@@ -49,9 +60,13 @@ public:
 
     Document(wxWindow *parent, const std::string &path) : Document{parent}
     {
-        this->path = path;
-        title = getFilename(path);
+        SetPath(path);
         Reload();
+    }
+
+    void Discard()
+    {
+        content->DiscardEdits();
     }
 
     void Reload()

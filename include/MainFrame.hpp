@@ -28,7 +28,11 @@ private:
     void onFileClose(wxCommandEvent &event);
     void onFileSave(wxCommandEvent &event);
     void onFileSaveAs(wxCommandEvent &event);
+    void onFileQuit(wxCommandEvent &event);
     void onSelectionChange(wxNotebookEvent &event);
+    void onClose(wxCloseEvent &event);
+
+    bool closeDocument(Document *document);
 
     void enableMenus(bool enable);
     wxMenuBar *createMenuBar();

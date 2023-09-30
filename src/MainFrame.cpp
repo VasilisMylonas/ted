@@ -12,8 +12,10 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(wxID_NEW, MainFrame::onFileNew)
     EVT_MENU(wxID_OPEN, MainFrame::onFileOpen)
     EVT_MENU(wxID_CLOSE, MainFrame::onFileClose)
+    EVT_MENU(wxID_EXIT, MainFrame::onFileQuit)
     EVT_MENU(wxID_SAVE, MainFrame::onFileSave)
     EVT_MENU(wxID_SAVEAS, MainFrame::onFileSaveAs)
+    EVT_CLOSE(MainFrame::onClose)
 wxEND_EVENT_TABLE();
 // clang-format on
 
@@ -75,6 +77,8 @@ MainFrame::MainFrame()
     panel->SetSizerAndFit(sizer);
 
     enableMenus(false);
+
+    history.Load(*wxConfig::Get());
 }
 
 void MainFrame::enableMenus(bool enable)
@@ -84,12 +88,44 @@ void MainFrame::enableMenus(bool enable)
     fileMenu->Enable(wxID_SAVEAS, enable);
 }
 
+void MainFrame::onClose(wxCloseEvent &event)
+{
+    Document *selected = nullptr;
+    while ((selected = getSelected()))
+    {
+        if (!closeDocument(selected))
+        {
+            return;
+        }
+    }
+
+    history.Save(*wxConfig::Get());
+    event.Skip();
+}
+
+void MainFrame::onFileQuit([[maybe_unused]] wxCommandEvent &event)
+{
+    Close();
+}
+
 void MainFrame::onFileSave([[maybe_unused]] wxCommandEvent &event)
 {
     auto selected = getSelected();
     if (!selected)
     {
         return;
+    }
+
+    if (selected->Path().empty())
+    {
+        auto path = showSaveDialog();
+        if (!path)
+        {
+            return;
+        }
+
+        selected->SetPath(*path);
+        notebook->SetPageText(notebook->GetSelection(), selected->Title());
     }
 
     selected->Save();
@@ -109,8 +145,7 @@ void MainFrame::onFileSaveAs([[maybe_unused]] wxCommandEvent &event)
         return;
     }
 
-    // TODO
-    selected->Reload();
+    selected->Discard();
 
     auto document = new Document(notebook, path.value());
     notebook->AddPage(document, document->Title(), true);
@@ -125,6 +160,7 @@ void MainFrame::onFileOpen([[maybe_unused]] wxCommandEvent &event)
         return;
     }
 
+    history.AddFileToHistory(path.value());
     auto document = new Document(notebook, path.value());
     notebook->AddPage(document, document->Title(), true);
     enableMenus(true);
@@ -137,10 +173,47 @@ void MainFrame::onFileNew([[maybe_unused]] wxCommandEvent &event)
     enableMenus(true);
 }
 
+bool MainFrame::closeDocument(Document *document)
+{
+    if (!document->IsModified())
+    {
+        return true;
+    }
+
+    auto result = ShowUnsavedChangesDialog();
+
+    // Cancel
+    if (!result)
+    {
+        return false;
+    }
+
+    // Don't save
+    if (!result.value())
+    {
+        return true;
+    }
+
+    auto path = showSaveDialog();
+    if (!path)
+    {
+        return false;
+    }
+
+    document->SetPath(*path);
+    document->Save();
+    return true;
+}
+
 void MainFrame::onFileClose([[maybe_unused]] wxCommandEvent &event)
 {
     auto selection = notebook->GetSelection();
-    // TODO: save
+
+    if (!closeDocument(getSelected()))
+    {
+        return;
+    }
+
     notebook->RemovePage(selection);
 
     if (notebook->GetPageCount() == 0)
