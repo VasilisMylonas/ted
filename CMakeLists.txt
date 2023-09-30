@@ -16,7 +16,6 @@ target_include_directories(ted PRIVATE include ${PROJECT_BINARY_DIR}/include)
 target_sources(ted PRIVATE
     src/App.cpp 
     src/MainFrame.cpp
-    src/MainPresenter.cpp
 )
 target_compile_options(ted PUBLIC -Wall -Wextra -Werror -Wpedantic) # -Wconversion
 target_link_libraries(ted wx::core wx::base)

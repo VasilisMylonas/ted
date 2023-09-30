@@ -8,3 +8,4 @@
 
 #include <wx/filehistory.h>
 #include <wx/config.h>
+#include <wx/notebook.h>
