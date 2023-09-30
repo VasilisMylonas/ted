@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 
 project(ted 
     VERSION 0.1 
@@ -21,4 +21,3 @@ target_compile_options(ted PUBLIC -Wall -Wextra -Werror -Wpedantic) # -Wconversi
 target_link_libraries(ted wx::core wx::base)
 
 configure_file(config.hpp.in include/config.hpp)
-
