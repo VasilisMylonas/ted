@@ -6,7 +6,7 @@ project(ted
     LANGUAGES CXX
 )
 
-add_subdirectory(deps/wxWidgets-3.2.2.1)
+add_subdirectory(deps/wxWidgets)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
