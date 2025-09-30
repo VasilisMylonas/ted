@@ -1,71 +1,74 @@
 #pragma once
 
-#include "Core.hpp"
-#include "Document.hpp"
+#include "TextDocument.hpp"
+#include <vector>
+#include <wx/config.h>
+#include <wx/filehistory.h>
+#include <wx/notebook.h>
+#include <wx/wx.h>
 
 #include <optional>
 #include <string>
 
-class MainFrame : public wxFrame
-{
+class MainFrame : public wxFrame {
 public:
-    MainFrame();
+  MainFrame();
 
-    std::optional<std::string> showSaveDialog();
-    std::optional<bool> ShowUnsavedChangesDialog();
-
-    // void AddDocument(const std::string &path = "");
-    // void RemoveSelected();
-    // std::optional<Document *> GetSelected();
+  // void AddDocument(const std::string &path = "");
+  // void RemoveSelected();
+  //   bool closeDocument(DocumentPanel *document);
+  //   wxFileHistory history;
 
 private:
-    Document *getSelected();
+  wxMenuBar *CreateMenuBar();
+  void CreateFileMenu();
+  void CreateEditMenu();
+  void EnableMenus(bool enable);
+  std::optional<std::string> ShowSaveFileDialog();
+  std::optional<std::string> ShowOpenFileDialog();
+  std::optional<bool> ShowUnsavedChangesDialog();
 
-    std::optional<std::string> showOpenDialog();
+  void OnFileNew(wxCommandEvent &event);
+  void OnFileOpen(wxCommandEvent &event);
+  void OnFileClose(wxCommandEvent &event);
+  void OnFileSave(wxCommandEvent &event);
+  void OnFileSaveAs(wxCommandEvent &event);
+  void OnFileQuit(wxCommandEvent &event);
+  void OnSelectionChange(wxNotebookEvent &event);
+  void OnClose(wxCloseEvent &event);
 
-    void onFileNew(wxCommandEvent &event);
-    void onFileOpen(wxCommandEvent &event);
-    void onFileClose(wxCommandEvent &event);
-    void onFileSave(wxCommandEvent &event);
-    void onFileSaveAs(wxCommandEvent &event);
-    void onFileQuit(wxCommandEvent &event);
-    void onSelectionChange(wxNotebookEvent &event);
-    void onClose(wxCloseEvent &event);
+  wxMenu *fileMenu;
+  wxMenu *editMenu;
+  wxNotebook *notebook;
+  std::vector<TextDocument> documents;
 
-    bool closeDocument(Document *document);
+  std::optional<std::reference_wrapper<TextDocument>> GetSelectedDocument();
 
-    void enableMenus(bool enable);
-    wxMenuBar *createMenuBar();
+  wxMessageDialog unsavedChangesDialog{
+      this,
+      wxT("You have unsaved changes. Your changes will be lost if you don't "
+          "save."),
+      wxT("Unsaved Changes"),
+      wxYES_NO | wxCANCEL | wxICON_WARNING,
+  };
 
-    wxMenu *fileMenu;
-    wxPanel *panel;
-    wxFileHistory history;
-    wxNotebook *notebook;
+  wxFileDialog saveFileDialog{
+      this,
+      wxT("Save File"),
+      wxEmptyString,
+      wxEmptyString,
+      wxT("Text Files (*.txt)|*.txt"),
+      wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
+  };
 
-    wxMessageDialog unsavedChangesDialog{
-        this,
-        wxT("You have unsaved changes. Your changes will be lost if you don't save."),
-        wxT("Unsaved Changes"),
-        wxYES_NO | wxCANCEL | wxICON_WARNING,
-    };
+  wxFileDialog openFileDialog{
+      this,
+      wxT("Open File"),
+      wxEmptyString,
+      wxEmptyString,
+      wxT("Text Files (*.txt)|*.txt"),
+      wxFD_OPEN | wxFD_FILE_MUST_EXIST,
+  };
 
-    wxFileDialog saveFileDialog{
-        this,
-        wxT("Save File"),
-        wxEmptyString,
-        wxEmptyString,
-        wxT("Text Files (*.txt)|*.txt"),
-        wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
-    };
-
-    wxFileDialog openFileDialog{
-        this,
-        wxT("Open File"),
-        wxEmptyString,
-        wxEmptyString,
-        wxT("Text Files (*.txt)|*.txt"),
-        wxFD_OPEN | wxFD_FILE_MUST_EXIST,
-    };
-
-    wxDECLARE_EVENT_TABLE();
+  wxDECLARE_EVENT_TABLE();
 };

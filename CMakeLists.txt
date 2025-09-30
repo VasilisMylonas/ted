@@ -1,23 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ted 
-    VERSION 0.1 
-    DESCRIPTION "A text editor" 
-    LANGUAGES CXX
-)
+project(ted CXX)
 
-add_subdirectory(deps/wxWidgets)
+file(GLOB SOURCES src/*.cpp)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED 20)
-
-add_executable(ted)
+add_executable(ted ${SOURCES})
 target_include_directories(ted PRIVATE include ${PROJECT_BINARY_DIR}/include)
-target_sources(ted PRIVATE
-    src/App.cpp 
-    src/MainFrame.cpp
-)
-target_compile_options(ted PUBLIC -Wall -Wextra -Werror -Wpedantic) # -Wconversion
-target_link_libraries(ted wx::core wx::base)
+
+find_package(wxWidgets COMPONENTS core base stc REQUIRED)
+
+target_compile_options(ted PRIVATE -Wall -Wextra -Werror)
+target_compile_features(ted PRIVATE cxx_std_20)
+target_link_libraries(ted PRIVATE wxWidgets::wxWidgets)
 
 configure_file(config.hpp.in include/config.hpp)

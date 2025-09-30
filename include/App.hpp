@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Core.hpp"
+#include <wx/wx.h>
 
-class App : public wxApp
-{
-    virtual bool OnInit() override;
+class App : public wxApp {
+  virtual bool OnInit() override;
 };
 
 wxDECLARE_APP(App);
