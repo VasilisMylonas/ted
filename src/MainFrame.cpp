@@ -1,8 +1,7 @@
 #include "MainFrame.hpp"
-#include "TextDocument.hpp"
-#include <functional>
-#include <optional>
-#include <wx/stc/stc.h>
+#include "Editor.hpp"
+#include <vector>
+#include <wx/log.h>
 
 enum {
   ID_NOTEBOOK = 10'000,
@@ -34,8 +33,6 @@ void MainFrame::CreateFileMenu() {
   // fileMenu->Append(wxID_CLOSE_ALL);
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT);
-
-  //   history.UseMenu(fileMenu);
 }
 
 void MainFrame::CreateEditMenu() {
@@ -57,7 +54,7 @@ wxMenuBar *MainFrame::CreateMenuBar() {
 
   auto menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, wxT("&File"));
-  menuBar->Append(editMenu, wxT("&Edit"));
+  // menuBar->Append(editMenu, wxT("&Edit"));
 
   return menuBar;
 }
@@ -69,84 +66,25 @@ MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, wxT("Ted")) {
 
   auto sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->Add(notebook, 1, wxEXPAND);
-
-  notebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &MainFrame::OnSelectionChange,
+  notebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &MainFrame::OnSelectionChanged,
                  this);
 
   SetMenuBar(CreateMenuBar());
   SetSizerAndFit(sizer);
   SetMinClientSize(wxSize(400, 300));
 
-  //   unsavedChangesDialog.SetYesNoCancelLabels(wxT("Save"), wxT("Don't save"),
-  //                                             wxT("Cancel"));
-
-  EnableMenus(false);
-
-  //   history.Load(*wxConfig::Get());
-}
-
-void MainFrame::EnableMenus(bool enable) {
-  fileMenu->Enable(wxID_CLOSE, enable);
-  fileMenu->Enable(wxID_SAVE, enable);
-  fileMenu->Enable(wxID_SAVEAS, enable);
+  SelectionChanged();
 }
 
 void MainFrame::OnClose([[maybe_unused]] wxCloseEvent &event) {
-  //   DocumentPanel *selected = nullptr;
-  //   while ((selected = getSelected())) {
-  //     if (!closeDocument(selected)) {
-  //       return;
-  //     }
-
-  //     notebook->RemovePage(notebook->GetSelection());
-
-  //     if (notebook->GetPageCount() == 0) {
-  //       enableMenus(false);
-  //     }
-  //   }
-
-  //   history.Save(*wxConfig::Get());
+  for (auto &editor : editors) {
+    editor->Close();
+  }
+  editors.clear();
   event.Skip();
 }
 
 void MainFrame::OnFileQuit([[maybe_unused]] wxCommandEvent &event) { Close(); }
-
-void MainFrame::OnFileSave([[maybe_unused]] wxCommandEvent &event) {
-  //   auto selected = getSelected();
-  //   if (!selected) {
-  //     return;
-  //   }
-
-  //   if (selected->Path().empty()) {
-  //     auto path = showSaveDialog();
-  //     if (!path) {
-  //       return;
-  //     }
-
-  //     selected->SetPath(*path);
-  //     notebook->SetPageText(notebook->GetSelection(), selected->Title());
-  //   }
-
-  //   selected->Save();
-}
-
-void MainFrame::OnFileSaveAs([[maybe_unused]] wxCommandEvent &event) {
-  auto selected = GetSelectedDocument();
-  if (!selected) {
-    return;
-  }
-
-  auto path = ShowSaveFileDialog();
-  if (!path) {
-    return;
-  }
-
-  //   selected->Discard();
-
-  //   auto document = new DocumentPanel(notebook, path.value());
-  //   notebook->AddPage(document, document->Title(), true);
-  //   document->Save();
-}
 
 void MainFrame::OnFileOpen([[maybe_unused]] wxCommandEvent &event) {
   auto path = ShowOpenFileDialog();
@@ -154,100 +92,83 @@ void MainFrame::OnFileOpen([[maybe_unused]] wxCommandEvent &event) {
     return;
   }
 
-  auto &document = documents.emplace_back(path.value());
-
-  auto editor = new wxStyledTextCtrl(notebook, wxID_ANY);
-
-  editor->SetText(document.GetContent());
-  editor->SetLexer(wxSTC_LEX_NULL);
-  notebook->AddPage(editor, document.GetPath(), true);
-
-  //   history.AddFileToHistory(path.value());
-  // auto document = new DocumentPanel(notebook, path.value());
-  //   enableMenus(true);
+  AddEditor(new Editor(notebook, path.value()));
 }
 
 void MainFrame::OnFileNew([[maybe_unused]] wxCommandEvent &event) {
-
-  //   auto document = new DocumentPanel(notebook);
-  //   notebook->AddPage(document, document->Title(), true);
-  //   enableMenus(true);
+  AddEditor(new Editor(notebook));
 }
 
-// bool MainFrame::closeDocument(DocumentPanel *document) {
-//   if (!document->IsModified()) {
-//     return true;
-//   }
+void MainFrame::OnFileSave([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
 
-//   auto result = ShowUnsavedChangesDialog();
+  editors[index]->Save();
+  notebook->SetPageText(index, editors[index]->GetTitle());
+}
 
-//   // Cancel
-//   if (!result) {
-//     return false;
-//   }
+void MainFrame::OnFileSaveAs([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
 
-//   // Don't save
-//   if (!result.value()) {
-//     return true;
-//   }
-
-//   auto path = showSaveDialog();
-//   if (!path) {
-//     return false;
-//   }
-
-//   document->SetPath(*path);
-//   document->Save();
-//   return true;
-// }
+  editors[index]->SaveAs();
+  notebook->SetPageText(index, editors[index]->GetTitle());
+}
 
 void MainFrame::OnFileClose([[maybe_unused]] wxCommandEvent &event) {
-  //   auto selection = notebook->GetSelection();
-
-  //   if (!closeDocument(getSelected())) {
-  //     return;
-  //   }
-
-  //   notebook->RemovePage(selection);
-
-  //   if (notebook->GetPageCount() == 0) {
-  //     enableMenus(false);
-  //   }
-}
-
-void MainFrame::OnSelectionChange([[maybe_unused]] wxNotebookEvent &event) {
-  //   auto selection = event.GetSelection();
-  //   enableMenus(selection != wxNOT_FOUND);
-  //   event.Skip();
-}
-
-std::optional<std::reference_wrapper<TextDocument>>
-MainFrame::GetSelectedDocument() {
-  if (notebook->GetPageCount() == 0) {
-    return std::nullopt;
-  }
-
   auto index = notebook->GetSelection();
-  return documents[index];
-}
 
-std::optional<bool> MainFrame::ShowUnsavedChangesDialog() {
-  switch (unsavedChangesDialog.ShowModal()) {
-  case wxID_YES:
-    return true;
-  case wxID_NO:
-    return false;
-  default:
-    return std::nullopt;
-  }
-}
-
-std::optional<std::string> MainFrame::ShowSaveFileDialog() {
-  if (saveFileDialog.ShowModal() == wxID_CANCEL) {
-    return std::nullopt;
+  if (index == wxNOT_FOUND) {
+    return;
   }
 
-  return saveFileDialog.GetPath().ToStdString();
+  auto editor = editors[index];
+  editor->Close();
+  std::erase(editors, editor);
+
+  notebook->DeletePage(index);
+}
+
+void MainFrame::OnSelectionChanged([[maybe_unused]] wxNotebookEvent &event) {
+  SelectionChanged();
+  event.Skip();
+}
+
+void MainFrame::OnEditorChanged([[maybe_unused]] wxStyledTextEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+
+  notebook->SetPageText(index, editors[index]->GetTitle() + "*");
+  event.Skip();
+}
+
+void MainFrame::AddEditor(Editor *editor) {
+  editors.push_back(editor);
+  editor->Bind(wxEVT_STC_CHANGE, &MainFrame::OnEditorChanged, this);
+  notebook->AddPage(editor, editor->GetTitle(), true);
+  SelectionChanged();
+}
+
+void MainFrame::SelectionChanged() {
+  bool hasTab = notebook->GetPageCount() > 0;
+
+  fileMenu->Enable(wxID_CLOSE, hasTab);
+  fileMenu->Enable(wxID_SAVE, hasTab);
+  fileMenu->Enable(wxID_SAVEAS, hasTab);
+
+  // editMenu->Enable(wxID_UNDO, hasTab);
+  // editMenu->Enable(wxID_REDO, hasTab);
+  // editMenu->Enable(wxID_COPY, hasTab);
+  // editMenu->Enable(wxID_CUT, hasTab);
+  // editMenu->Enable(wxID_PASTE, hasTab);
+  // editMenu->Enable(wxID_FIND, hasTab);
+  // editMenu->Enable(wxID_REPLACE, hasTab);
 }
 
 std::optional<std::string> MainFrame::ShowOpenFileDialog() {
