@@ -28,6 +28,15 @@ private:
   void OnFileSave(wxCommandEvent &event);
   void OnFileSaveAs(wxCommandEvent &event);
   void OnFileQuit(wxCommandEvent &event);
+
+  void OnEditUndo(wxCommandEvent &event);
+  void OnEditRedo(wxCommandEvent &event);
+  void OnEditCut(wxCommandEvent &event);
+  void OnEditCopy(wxCommandEvent &event);
+  void OnEditPaste(wxCommandEvent &event);
+  void OnEditFind(wxCommandEvent &event);
+  void OnEditReplace(wxCommandEvent &event);
+
   void OnSelectionChanged(wxNotebookEvent &event);
   void OnEditorChanged(wxStyledTextEvent &event);
   void OnClose(wxCloseEvent &event);

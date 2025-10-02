@@ -17,6 +17,26 @@ public:
   bool IsModified();
   std::string GetTitle();
 
+  void Paste() { textCtrl->Paste(); }
+
+  void Copy() { textCtrl->Copy(); }
+
+  void Cut() { textCtrl->Cut(); }
+
+  // TODO: space should be an undo point
+
+  void Undo() { textCtrl->Undo(); }
+
+  void Redo() { textCtrl->Redo(); }
+
+  void Find() {
+    // TODO
+  }
+
+  void Replace() {
+    // TODO
+  }
+
 private:
   bool ShowUnsavedChangesDialog();
   std::optional<std::string> ShowSaveFileDialog();

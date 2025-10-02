@@ -54,7 +54,7 @@ wxMenuBar *MainFrame::CreateMenuBar() {
 
   auto menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, wxT("&File"));
-  // menuBar->Append(editMenu, wxT("&Edit"));
+  menuBar->Append(editMenu, wxT("&Edit"));
 
   return menuBar;
 }
@@ -133,6 +133,62 @@ void MainFrame::OnFileClose([[maybe_unused]] wxCommandEvent &event) {
   notebook->DeletePage(index);
 }
 
+void MainFrame::OnEditUndo([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Undo();
+}
+
+void MainFrame::OnEditRedo([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Redo();
+}
+
+void MainFrame::OnEditCut([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Cut();
+}
+
+void MainFrame::OnEditCopy([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Copy();
+}
+
+void MainFrame::OnEditPaste([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Paste();
+}
+
+void MainFrame::OnEditFind([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Find();
+}
+
+void MainFrame::OnEditReplace([[maybe_unused]] wxCommandEvent &event) {
+  auto index = notebook->GetSelection();
+  if (index == wxNOT_FOUND) {
+    return;
+  }
+  editors[index]->Replace();
+}
+
 void MainFrame::OnSelectionChanged([[maybe_unused]] wxNotebookEvent &event) {
   SelectionChanged();
   event.Skip();
@@ -161,14 +217,13 @@ void MainFrame::SelectionChanged() {
   fileMenu->Enable(wxID_CLOSE, hasTab);
   fileMenu->Enable(wxID_SAVE, hasTab);
   fileMenu->Enable(wxID_SAVEAS, hasTab);
-
-  // editMenu->Enable(wxID_UNDO, hasTab);
-  // editMenu->Enable(wxID_REDO, hasTab);
-  // editMenu->Enable(wxID_COPY, hasTab);
-  // editMenu->Enable(wxID_CUT, hasTab);
-  // editMenu->Enable(wxID_PASTE, hasTab);
-  // editMenu->Enable(wxID_FIND, hasTab);
-  // editMenu->Enable(wxID_REPLACE, hasTab);
+  editMenu->Enable(wxID_UNDO, hasTab);
+  editMenu->Enable(wxID_REDO, hasTab);
+  editMenu->Enable(wxID_COPY, hasTab);
+  editMenu->Enable(wxID_CUT, hasTab);
+  editMenu->Enable(wxID_PASTE, hasTab);
+  editMenu->Enable(wxID_FIND, hasTab);
+  editMenu->Enable(wxID_REPLACE, hasTab);
 }
 
 std::optional<std::string> MainFrame::ShowOpenFileDialog() {
