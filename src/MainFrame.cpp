@@ -73,9 +73,22 @@ MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, wxT("Ted")) {
   notebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &MainFrame::OnSelectionChanged,
                  this);
 
+  // Bind to the custom status update event
+  Bind(wxEVT_COMMAND_TEXT_UPDATED, &MainFrame::OnEditorStatusUpdate, this);
+
   SetMenuBar(CreateMenuBar());
   SetSizerAndFit(sizer);
   SetMinClientSize(wxSize(400, 300));
+
+  // Create status bar with three fields
+  CreateStatusBar(3);
+  int widths[] = {-1, 100, 150}; // -1 means variable width
+  SetStatusWidths(3, widths);
+
+  // Set initial status text
+  SetStatusText(wxT("Ready"), 0);
+  SetStatusText(wxT("Ln: 1, Col: 1"), 1);
+  SetStatusText(wxT("Text"), 2);
 
   SelectionChanged();
 }
@@ -210,6 +223,17 @@ void MainFrame::OnEditReplace([[maybe_unused]] wxCommandEvent &event) {
 
 void MainFrame::OnSelectionChanged([[maybe_unused]] wxNotebookEvent &event) {
   SelectionChanged();
+
+  // Update status bar with current editor information
+  int index = notebook->GetSelection();
+  if (index != wxNOT_FOUND && index < static_cast<int>(editors.size())) {
+    SetStatusText(editors[index]->GetTitle(), 0);
+  } else {
+    SetStatusText(wxT("Ready"), 0);
+    SetStatusText(wxT("Ln: 1, Col: 1"), 1);
+    SetStatusText(wxT("Text"), 2);
+  }
+
   event.Skip();
 }
 
@@ -228,6 +252,9 @@ void MainFrame::AddEditor(Editor *editor) {
   editor->Bind(wxEVT_STC_CHANGE, &MainFrame::OnEditorChanged, this);
   notebook->AddPage(editor, editor->GetTitle(), true);
   SelectionChanged();
+
+  // Update status bar with information from the newly added editor
+  SetStatusText(editor->GetTitle(), 0);
 }
 
 void MainFrame::SelectionChanged() {
@@ -252,4 +279,17 @@ std::optional<std::string> MainFrame::ShowOpenFileDialog() {
   }
 
   return openFileDialog.GetPath().ToStdString();
+}
+
+void MainFrame::OnEditorStatusUpdate(wxCommandEvent &event) {
+  int line = event.GetInt();
+  int col = event.GetExtraLong();
+  wxString language = event.GetString();
+
+  // Update status bar with line/column information
+  wxString posText = wxString::Format(wxT("Ln: %d, Col: %d"), line, col);
+  SetStatusText(posText, 1);
+
+  // Update language information
+  SetStatusText(language, 2);
 }

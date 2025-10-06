@@ -41,6 +41,7 @@ private:
   void OnSelectionChanged(wxNotebookEvent &event);
   void OnEditorChanged(wxStyledTextEvent &event);
   void OnClose(wxCloseEvent &event);
+  void OnEditorStatusUpdate(wxCommandEvent &event);
 
   wxMenu *fileMenu;
   wxMenu *editMenu;

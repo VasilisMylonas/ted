@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <wx/fdrepdlg.h>
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
@@ -27,8 +28,26 @@ public:
 
 private:
   void OnChar(wxKeyEvent &event);
+  void OnFindDialogEvents(wxFindDialogEvent &event);
+  void OnCaretPositionChanged(wxStyledTextEvent &event);
   bool ShowUnsavedChangesDialog();
   std::optional<std::string> ShowSaveFileDialog();
+  void ShowFindDialog();
+  void ShowReplaceDialog();
+
+  // Syntax highlighting methods
+  void SetupEditor();
+  void SetSyntaxHighlighting(const std::string &filename);
+  void ApplyStyle(int lexer);
+  void StyleClearAll();
+
+  // Get language name from lexer type
+  wxString GetLanguageName() const;
+
+  // Search flags and data
+  int searchFlags = 0;
+  wxString findText;
+  wxString replaceText;
 
   wxMessageDialog unsavedChangesDialog{
       this,
@@ -42,6 +61,11 @@ private:
       wxEmptyString, wxT("Any File (*)|*"), wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
   };
 
+  wxFindReplaceDialog *findDialog = nullptr;
+  wxFindReplaceDialog *replaceDialog = nullptr;
+  wxFindReplaceData findReplaceData;
+
   wxStyledTextCtrl *textCtrl;
   std::string path;
+  int currentLexer = wxSTC_LEX_NULL; // Current syntax highlighter
 };
