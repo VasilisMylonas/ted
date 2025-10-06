@@ -1,20 +1,24 @@
 #include "MainFrame.hpp"
 #include "Editor.hpp"
 #include <vector>
-#include <wx/log.h>
-
-enum {
-  ID_NOTEBOOK = 10'000,
-};
+#include <wx/notebook.h>
 
 // clang-format off
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(wxID_NEW, MainFrame::OnFileNew)
     EVT_MENU(wxID_OPEN, MainFrame::OnFileOpen)
     EVT_MENU(wxID_CLOSE, MainFrame::OnFileClose)
+    EVT_MENU(wxID_CLOSE_ALL, MainFrame::OnFileCloseAll)
     EVT_MENU(wxID_EXIT, MainFrame::OnFileQuit)
     EVT_MENU(wxID_SAVE, MainFrame::OnFileSave)
     EVT_MENU(wxID_SAVEAS, MainFrame::OnFileSaveAs)
+    EVT_MENU(wxID_UNDO, MainFrame::OnEditUndo)
+    EVT_MENU(wxID_REDO, MainFrame::OnEditRedo)
+    EVT_MENU(wxID_CUT, MainFrame::OnEditCut)
+    EVT_MENU(wxID_COPY, MainFrame::OnEditCopy)
+    EVT_MENU(wxID_PASTE, MainFrame::OnEditPaste)
+    EVT_MENU(wxID_FIND, MainFrame::OnEditFind)
+    EVT_MENU(wxID_REPLACE, MainFrame::OnEditReplace)
     EVT_CLOSE(MainFrame::OnClose)
 wxEND_EVENT_TABLE();
 // clang-format on
@@ -30,7 +34,7 @@ void MainFrame::CreateFileMenu() {
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_CLOSE);
   // Problematic: wxWidgets bug?
-  // fileMenu->Append(wxID_CLOSE_ALL);
+  fileMenu->Append(wxID_CLOSE_ALL, "Close All\tCtrl+Shift+W");
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT);
 }
@@ -133,6 +137,21 @@ void MainFrame::OnFileClose([[maybe_unused]] wxCommandEvent &event) {
   notebook->DeletePage(index);
 }
 
+void MainFrame::OnFileCloseAll([[maybe_unused]] wxCommandEvent &event) {
+  // Make a copy of the editors vector since we'll be modifying it in the loop
+  auto editorsCopy = editors;
+  for (auto editor : editorsCopy) {
+    editor->Close();
+  }
+
+  // Clear the editors vector and remove all pages from the notebook
+  editors.clear();
+  notebook->DeleteAllPages();
+
+  // Update the menu items
+  SelectionChanged();
+}
+
 void MainFrame::OnEditUndo([[maybe_unused]] wxCommandEvent &event) {
   auto index = notebook->GetSelection();
   if (index == wxNOT_FOUND) {
@@ -215,6 +234,7 @@ void MainFrame::SelectionChanged() {
   bool hasTab = notebook->GetPageCount() > 0;
 
   fileMenu->Enable(wxID_CLOSE, hasTab);
+  fileMenu->Enable(wxID_CLOSE_ALL, hasTab);
   fileMenu->Enable(wxID_SAVE, hasTab);
   fileMenu->Enable(wxID_SAVEAS, hasTab);
   editMenu->Enable(wxID_UNDO, hasTab);

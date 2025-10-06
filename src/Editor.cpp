@@ -1,10 +1,13 @@
 #include "Editor.hpp"
+#include <wx/event.h>
+#include <wx/notebook.h>
 
 Editor::Editor(wxWindow *parent) : wxPanel(parent) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   textCtrl = new wxStyledTextCtrl(this, wxID_ANY);
   sizer->Add(textCtrl, 1, wxEXPAND);
   SetSizerAndFit(sizer);
+  textCtrl->Bind(wxEVT_CHAR, &Editor::OnChar, this);
 }
 
 Editor::Editor(wxWindow *parent, const std::string &path) : Editor(parent) {
@@ -76,4 +79,31 @@ std::optional<std::string> Editor::ShowSaveFileDialog() {
     return std::nullopt;
   }
   return saveFileDialog.GetPath().ToStdString();
+}
+
+void Editor::Paste() { textCtrl->Paste(); }
+
+void Editor::Copy() { textCtrl->Copy(); }
+
+void Editor::Cut() { textCtrl->Cut(); }
+
+void Editor::Undo() { textCtrl->Undo(); }
+
+void Editor::Redo() { textCtrl->Redo(); }
+
+void Editor::Find() {
+  // TODO
+}
+void Editor::Replace() {
+  // TODO
+}
+
+void Editor::OnChar(wxKeyEvent &event) {
+  if (event.GetKeyCode() == WXK_SPACE) {
+    textCtrl->BeginUndoAction();
+    event.Skip();
+    textCtrl->EndUndoAction();
+  } else {
+    event.Skip();
+  }
 }

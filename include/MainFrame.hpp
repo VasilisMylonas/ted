@@ -25,6 +25,7 @@ private:
   void OnFileNew(wxCommandEvent &event);
   void OnFileOpen(wxCommandEvent &event);
   void OnFileClose(wxCommandEvent &event);
+  void OnFileCloseAll(wxCommandEvent &event);
   void OnFileSave(wxCommandEvent &event);
   void OnFileSaveAs(wxCommandEvent &event);
   void OnFileQuit(wxCommandEvent &event);

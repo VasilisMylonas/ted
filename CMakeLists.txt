@@ -12,5 +12,3 @@ find_package(wxWidgets COMPONENTS core base stc REQUIRED)
 target_compile_options(ted PRIVATE -Wall -Wextra -Werror)
 target_compile_features(ted PRIVATE cxx_std_20)
 target_link_libraries(ted PRIVATE wxWidgets::wxWidgets)
-
-configure_file(config.hpp.in include/config.hpp)
