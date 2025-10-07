@@ -284,10 +284,10 @@ std::optional<std::string> MainFrame::ShowOpenFileDialog() {
 void MainFrame::OnEditorStatusUpdate(wxCommandEvent &event) {
   int line = event.GetInt();
   int col = event.GetExtraLong();
-  wxString language = event.GetString();
+  auto language = event.GetString();
 
   // Update status bar with line/column information
-  wxString posText = wxString::Format(wxT("Ln: %d, Col: %d"), line, col);
+  auto posText = wxString::Format(wxT("Ln: %d, Col: %d"), line, col);
   SetStatusText(posText, 1);
 
   // Update language information
