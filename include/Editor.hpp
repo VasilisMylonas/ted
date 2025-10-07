@@ -32,8 +32,6 @@ private:
   void OnCaretPositionChanged(wxStyledTextEvent &event);
   bool ShowUnsavedChangesDialog();
   std::optional<std::string> ShowSaveFileDialog();
-  void ShowFindDialog();
-  void ShowReplaceDialog();
 
   // Syntax highlighting methods
   void SetupEditor();
@@ -41,8 +39,8 @@ private:
   void ApplyStyle(int lexer);
   void StyleClearAll();
 
-  // Get language name from lexer type
-  wxString GetLanguageName() const;
+  static std::string GetLanguageNameFromLexer(int lexer);
+  static int GetLexerFromFileExtension(const std::string &fileExtension);
 
   // Search flags and data
   int searchFlags = 0;
