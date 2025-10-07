@@ -34,7 +34,8 @@ public:
 private:
   void DoFindReplace(int searchFlags, const std::string &findText,
                      bool next = false, bool replace = false,
-                     const std::string &replaceText = "");
+                     const std::string &replaceText = "",
+                     bool replaceAll = false);
 
   void OnCaretPositionChanged(wxStyledTextEvent &event);
 

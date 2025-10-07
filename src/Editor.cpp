@@ -145,9 +145,38 @@ static int FindDialogEventFlagsToSearchFlags(int flags) {
 
 void Editor::DoFindReplace(int searchFlags, const std::string &findText,
                            bool next, bool replace,
-                           const std::string &replaceText) {
+                           const std::string &replaceText, bool replaceAll) {
   textCtrl->SetSearchFlags(searchFlags);
 
+  if (replaceAll) {
+    int count = 0;
+    textCtrl->BeginUndoAction();
+
+    // Start from the beginning of the document
+    textCtrl->SetTargetStart(0);
+    textCtrl->SetTargetEnd(textCtrl->GetTextLength());
+    int pos = textCtrl->SearchInTarget(findText);
+
+    while (pos >= 0) {
+      textCtrl->SetTargetStart(pos);
+      textCtrl->SetTargetEnd(pos + findText.length());
+      textCtrl->ReplaceTarget(replaceText);
+      count++;
+
+      // Continue searching after the replaced text
+      textCtrl->SetTargetStart(pos + replaceText.length());
+      textCtrl->SetTargetEnd(textCtrl->GetTextLength());
+      pos = textCtrl->SearchInTarget(findText);
+    }
+
+    textCtrl->EndUndoAction();
+
+    wxString message = wxString::Format(wxT("Replaced %d occurrences"), count);
+    wxMessageBox(message, wxT("Replace All"), wxOK | wxICON_INFORMATION);
+    return;
+  }
+
+  // Regular find/replace (not replace all)
   textCtrl->SetTargetStart(textCtrl->GetCurrentPos());
 
   if (next) {
@@ -179,6 +208,8 @@ void Editor::DoFindReplace(int searchFlags, const std::string &findText,
       textCtrl->SetSelection(pos, pos + replaceText.length());
     }
     textCtrl->EnsureCaretVisible();
+    wxMessageBox(wxT("Search wrapped to the beginning of the document"),
+                 wxT("Find"), wxOK | wxICON_INFORMATION);
     return;
   }
 
@@ -207,7 +238,13 @@ void Editor::OnFindReplace(wxFindDialogEvent &event) {
                 replaceText.ToStdString());
 }
 
-void Editor::OnFindReplaceAll([[maybe_unused]] wxFindDialogEvent &event) {}
+void Editor::OnFindReplaceAll(wxFindDialogEvent &event) {
+  findText = event.GetFindString();
+  replaceText = event.GetReplaceString();
+  searchFlags = FindDialogEventFlagsToSearchFlags(event.GetFlags());
+  DoFindReplace(searchFlags, findText.ToStdString(), false, true,
+                replaceText.ToStdString(), true);
+}
 
 void Editor::OnCaretPositionChanged(wxStyledTextEvent &event) {
   int pos = textCtrl->GetCurrentPos();
